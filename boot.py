@@ -13,6 +13,7 @@ import boto
 import boto.ec2.elb
 import boto.utils
 import boto.ec2
+import boto.vpc
 import boto.s3.connection
 from cli.log import LoggingApp
 from boto.exception import EC2ResponseError
@@ -22,7 +23,7 @@ __author__ = ['Giulio.Calzolari']
 class BootEnv(LoggingApp):
 
     def connect_boto(self):
-        region = boto.ec2.get_region('eu-west-1', aws_access_key_id=self.config["aws_access_key_id"], aws_secret_access_key=self.config["aws_secret_access_key"])
+        region = boto.ec2.get_region(self.config["aws_region"], aws_access_key_id=self.config["aws_access_key_id"], aws_secret_access_key=self.config["aws_secret_access_key"])
         self.conn = boto.connect_ec2( aws_access_key_id=self.config["aws_access_key_id"], aws_secret_access_key=self.config["aws_secret_access_key"],region=region)
 
 
@@ -165,7 +166,30 @@ class BootEnv(LoggingApp):
         os.system("knife node delete "+self.params.instance+" ")
         os.system("knife client delete "+self.params.instance+" ")
 
-    def get_allowed_method():
+
+    def lookupSG(self,Name):
+        groups = self.conn.get_all_security_groups()
+        for group in groups:
+            if group.name == Name:
+                return group.id
+
+        self.log.error("Error cannot find the SG "+ Name)
+        quit("")
+
+    def lookupSubnet(self,Name):
+        region = boto.ec2.get_region(self.config["aws_region"], aws_access_key_id=self.config["aws_access_key_id"], aws_secret_access_key=self.config["aws_secret_access_key"])
+        conn = boto.vpc.VPCConnection(region=region,aws_access_key_id=self.config["aws_access_key_id"],aws_secret_access_key=self.config["aws_secret_access_key"])
+
+        subnets = conn.get_all_subnets()
+        for subnet in subnets:
+            if "Name" in subnet.tags:
+                if subnet.tags["Name"] == Name:
+                    return subnet.id
+
+        self.log.error("Error cannot find the subnet "+ Name)
+        quit("")
+
+    def get_allowed_method(self):
         return ['create', 'delete','ssh']
 
     def main(self):
@@ -214,8 +238,25 @@ class BootEnv(LoggingApp):
         os.environ["AWS_DEFAULT_PROFILE"] = self.config["profile"]
 
         self.connect_boto()
+
+
+
+        matchSG = re.match( r'^lookupSG\((.*)\)$', self.config["environment"][self.params.environment][self.params.instance]["security-group-ids"], re.M|re.I)
+        if matchSG:
+            self.log.info("Lookup SG:"+matchSG.group(1))
+            self.config["environment"][self.params.environment][self.params.instance]["security-group-ids"] =self.lookupSG(matchSG.group(1))
+
+        matchSubnet = re.match( r'^lookupSubnet\((.*)\)$', self.config["environment"][self.params.environment][self.params.instance]["subnet"], re.M|re.I)
+        if matchSubnet:
+            self.log.info("Lookup Subnet:"+matchSubnet.group(1))
+            self.config["environment"][self.params.environment][self.params.instance]["subnet"] =self.lookupSubnet(matchSubnet.group(1))
+
+
+        self.log.debug( self.config["environment"][self.params.environment][self.params.instance])
         # locals()[self.params.action+'_instance']()
         # getattr(self, self.params.action+'_instance')()
+
+
         getattr(self, '%s_instance' % self.params.action )()
 
 

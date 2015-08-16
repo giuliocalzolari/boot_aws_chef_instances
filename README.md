@@ -32,10 +32,10 @@ Example of config.yaml
             private-ip-address: 10.0.0.10
             <<: *default_value
           linux02:
-            security-group-ids: sg-12345
+            security-group-ids: lookupSG(DBSecurityGroup)
             tags: Name=linux02,Role=DB,Platform=Test
             availability-zone: eu-west-1b
-            subnet: subnet-123456
+            subnet: lookupSubnet(PrivateSubnet)
             run-list: 'role[db]'
             private-ip-address: 10.0.0.20
             <<: *default_value
