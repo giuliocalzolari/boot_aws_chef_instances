@@ -46,12 +46,12 @@ class BootEnv(LoggingApp):
         else:
             return False
 
-    def execute_cmd(self,cmd,argvs):
+    def execute_cmd(self,cmd,argvs=None):
         if len(argvs) > 0:
             for argv in argvs:
                 cmd +=str(" --"+argv+' '+self.quote_argument(argvs[argv]))
-            print cmd
 
+        self.log.debug(cmd)
         os.system(cmd)
         return
 
@@ -134,11 +134,20 @@ class BootEnv(LoggingApp):
         found = False
         for res in reservations:
             for inst in res.instances:
-                if self.is_ip_private(inst.ip_address) == False:
-                    self.log.info ("Connecting to Public IP: "+inst.ip_address)
+                if self.config["aws_ssh_connect_ip"] == "public":
+                    condition = False
+                elif self.config["aws_ssh_connect_ip"] == "private":
+                    condition = True
+                else:
+                    self.log.error("invalid mapping of aws_ssh_connect_ip  allowed value are public or private")
+                    exit(1)
+
+                if self.is_ip_private(inst.ip_address) == condition:
+                    self.log.info ("Connecting to "+self.config["aws_ssh_connect_ip"]+" IP: "+inst.ip_address)
                     found = True
-                    os.system("ssh -l centos -i ~/.ssh/ext_cloudreach_access.key "+inst.ip_address)
+                    os.system("ssh "+self.config["aws_ssh_argv"]+" "+inst.ip_address)
                     break
+
 
         if found == False:
             self.log.error("No instances found - searched name: "+self.params.instance)

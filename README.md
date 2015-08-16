@@ -13,6 +13,8 @@ Example of config.yaml
       aws_access_key_id: "AAAAAAAAAAAAAAAA"
       aws_secret_access_key: "BBBBBBBBBBBBBBBBBBBBBBBBB"
       aws_region: eu-west-1
+      aws_ssh_connect_ip: public    # private or public
+      aws_ssh_argv: " -l ec2-user -i /path/your/private.key"
       profile: your_profile
 
 
