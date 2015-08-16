@@ -4,6 +4,7 @@ Example of config.yaml
 
       aws_access_key_id: "AAAAAAAAAAAAAAAA"
       aws_secret_access_key: "BBBBBBBBBBBBBBBBBBBBBBBBB"
+      aws_region: eu-west-1
       profile: your_profile
 
 
