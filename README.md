@@ -1,5 +1,13 @@
 # boot_aws_chef_instances
 
+installation
+
+      git clone https://github.com/giuliocalzolari/boot_aws_chef_instances.git
+      pip install -r ./requirements.txt
+      - crete your config.yaml
+      chmod 755 boot.py
+      ./boot.py -a create -i linux01
+
 Example of config.yaml
 
       aws_access_key_id: "AAAAAAAAAAAAAAAA"
