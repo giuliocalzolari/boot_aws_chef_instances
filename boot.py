@@ -129,23 +129,25 @@ class BootEnv(LoggingApp):
         return True
 
 
-    def ssh_instance(self):
+    def _ssh_instance(self):
         reservations = self.conn.get_all_instances(filters={"tag:Name" : self.params.instance, 'instance-state-name' : 'running'})
         found = False
         for res in reservations:
             for inst in res.instances:
                 if self.config["aws_ssh_connect_ip"] == "public":
                     condition = False
+                    check_ip = inst.ip_address
                 elif self.config["aws_ssh_connect_ip"] == "private":
                     condition = True
+                    check_ip = inst.private_ip_address
                 else:
                     self.log.error("invalid mapping of aws_ssh_connect_ip  allowed value are public or private")
                     exit(1)
 
-                if self.is_ip_private(inst.ip_address) == condition:
-                    self.log.info ("Connecting to "+self.config["aws_ssh_connect_ip"]+" IP: "+inst.ip_address)
+                if self.is_ip_private(check_ip) == condition:
+                    self.log.info ("Connecting to "+self.config["aws_ssh_connect_ip"]+" IP: "+check_ip)
                     found = True
-                    os.system("ssh "+self.config["aws_ssh_argv"]+" "+inst.ip_address)
+                    os.system("ssh "+self.config["aws_ssh_argv"]+" "+check_ip)
                     break
 
 
@@ -154,11 +156,11 @@ class BootEnv(LoggingApp):
             exit(1)
         # self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
-    def create_instance(self):
+    def _create_instance(self):
         self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
 
-    def delete_instance(self):
+    def _delete_instance(self):
         instance_id = None
         reservations = self.conn.get_all_instances(filters={"tag:Name" : self.params.instance, 'instance-state-name' : 'running'})
         for res in reservations:
@@ -199,7 +201,12 @@ class BootEnv(LoggingApp):
         quit("")
 
     def get_allowed_method(self):
-        return ['create', 'delete','ssh']
+        m = []
+        for mth in dir(self):
+            valid = re.match( r'^_(.*)_instance$', mth, re.M|re.I)
+            if valid:
+                m.append(valid.group(1))
+        return m
 
     def main(self):
         """
@@ -266,7 +273,7 @@ class BootEnv(LoggingApp):
         # getattr(self, self.params.action+'_instance')()
 
 
-        getattr(self, '%s_instance' % self.params.action )()
+        getattr(self, '_%s_instance' % self.params.action )()
 
 
         end = time.time()
@@ -283,21 +290,22 @@ if __name__ == "__main__":
 
 
     b=BootEnv()
-    b.add_param(
-        "-y", "--yamlfile", default="./config.yaml",
-        dest="yamlfile", required=False,
-        help="main config file default( ./config.yaml )")
+
     b.add_param(
         "-a", "--action",
         dest="action", required=True,
         help="The action to preform: %s" % (", ".join(b.get_allowed_method())))
     b.add_param(
+        "-i", "--instance",
+        dest="instance", required=True,
+        help="Name of instance to build")
+    b.add_param(
         "-e", "--environment",default="development",
         dest="environment", required=False,
         help="environment to build")
     b.add_param(
-        "-i", "--instance",
-        dest="instance", required=True,
-        help="Name of instance to build")
+        "-y", "--yamlfile", default="./config.yaml",
+        dest="yamlfile", required=False,
+        help="main config file default( ./config.yaml )")
 
     b.run()

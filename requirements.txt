@@ -1,0 +1,5 @@
+pyyaml>=3.11
+pycli>=2.0.3
+boto>=2.38.0
+pystache>=0.5.4
+PyYAML=>=3.11
