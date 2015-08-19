@@ -158,11 +158,12 @@ class BootEnv(LoggingApp):
         # self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
     def _create_instance(self):
-        tags = { "Name": self.params.instance, "Environment":self.params.environment  }
+        tags = { "Environment":self.params.environment  }
         tags.update(self.config["global_config"]["tags"])
         tags.update(self.config["environment"][self.params.environment][self.params.instance]["tags"])
 
-        self.config["environment"][self.params.environment][self.params.instance]["tags"] = ','.join('%s=%s' % o for o in tags.items())
+        self.config["environment"][self.params.environment][self.params.instance]["tags"] =  "Name="+self.params.instance+","+','.join('%s=%s' % o for o in tags.items())
+
         self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
 
@@ -263,19 +264,19 @@ class BootEnv(LoggingApp):
         self.connect_boto()
 
 
+        if self.params.action == "create":
+            matchSG = re.match( r'^lookupSG\((.*)\)$', self.config["environment"][self.params.environment][self.params.instance]["security-group-ids"], re.M|re.I)
+            if matchSG:
+                self.log.info("Lookup SG:"+matchSG.group(1))
+                self.config["environment"][self.params.environment][self.params.instance]["security-group-ids"] =self.lookupSG(matchSG.group(1))
 
-        matchSG = re.match( r'^lookupSG\((.*)\)$', self.config["environment"][self.params.environment][self.params.instance]["security-group-ids"], re.M|re.I)
-        if matchSG:
-            self.log.info("Lookup SG:"+matchSG.group(1))
-            self.config["environment"][self.params.environment][self.params.instance]["security-group-ids"] =self.lookupSG(matchSG.group(1))
-
-        matchSubnet = re.match( r'^lookupSubnet\((.*)\)$', self.config["environment"][self.params.environment][self.params.instance]["subnet"], re.M|re.I)
-        if matchSubnet:
-            self.log.info("Lookup Subnet:"+matchSubnet.group(1))
-            self.config["environment"][self.params.environment][self.params.instance]["subnet"] =self.lookupSubnet(matchSubnet.group(1))
+            matchSubnet = re.match( r'^lookupSubnet\((.*)\)$', self.config["environment"][self.params.environment][self.params.instance]["subnet"], re.M|re.I)
+            if matchSubnet:
+                self.log.info("Lookup Subnet:"+matchSubnet.group(1))
+                self.config["environment"][self.params.environment][self.params.instance]["subnet"] =self.lookupSubnet(matchSubnet.group(1))
 
 
-        self.log.debug( self.config["environment"][self.params.environment][self.params.instance])
+            self.log.debug( self.config["environment"][self.params.environment][self.params.instance])
         # locals()[self.params.action+'_instance']()
         # getattr(self, self.params.action+'_instance')()
 
