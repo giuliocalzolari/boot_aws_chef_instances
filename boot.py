@@ -51,7 +51,7 @@ class BootEnv(LoggingApp):
             for argv in argvs:
                 cmd +=str(" --"+argv+' '+self.quote_argument(argvs[argv]))
 
-        self.log.debug(cmd)
+        self.log.info(cmd)
         os.system(cmd)
         return
 
@@ -130,7 +130,8 @@ class BootEnv(LoggingApp):
 
 
     def _ssh_instance(self):
-        reservations = self.conn.get_all_instances(filters={"tag:Name" : self.params.instance, 'instance-state-name' : 'running'})
+        filters = {"tag:Name" : self.params.instance,"tag:Environment" : self.params.environment, 'instance-state-name' : 'running'}
+        reservations = self.conn.get_all_instances(filters=filters)
         found = False
         for res in reservations:
             for inst in res.instances:
@@ -157,16 +158,25 @@ class BootEnv(LoggingApp):
         # self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
     def _create_instance(self):
+        tags = { "Name": self.params.instance, "Environment":self.params.environment  }
+        tags.update(self.config["global_config"]["tags"])
+        tags.update(self.config["environment"][self.params.environment][self.params.instance]["tags"])
+
+        self.config["environment"][self.params.environment][self.params.instance]["tags"] = ','.join('%s=%s' % o for o in tags.items())
         self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
 
     def _delete_instance(self):
         instance_id = None
-        reservations = self.conn.get_all_instances(filters={"tag:Name" : self.params.instance, 'instance-state-name' : 'running'})
+        filters = {"tag:Name" : self.params.instance,"tag:Environment" : self.params.environment, 'instance-state-name' : 'running'}
+        reservations = self.conn.get_all_instances(filters=filters)
         for res in reservations:
             for inst in res.instances:
                 instance_id = inst.id
                 break
+
+        print instance_id
+        sys.exit(0)
 
         if instance_id:
             self.terminate_with_vols_instance(instance_id)
@@ -286,11 +296,7 @@ class BootEnv(LoggingApp):
 
 
 if __name__ == "__main__":
-
-
-
     b=BootEnv()
-
     b.add_param(
         "-a", "--action",
         dest="action", required=True,
