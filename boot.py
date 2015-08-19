@@ -175,9 +175,6 @@ class BootEnv(LoggingApp):
                 instance_id = inst.id
                 break
 
-        print instance_id
-        sys.exit(0)
-
         if instance_id:
             self.terminate_with_vols_instance(instance_id)
         else:
