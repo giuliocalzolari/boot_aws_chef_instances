@@ -21,6 +21,8 @@ Example of config.yaml
       global_config: &default_value
         ssh-user: centos
         ssh-key: ~/.ssh/private.key
+        tags:
+          Platform: Test
         iam-profile: iam_role_s3
         flavor: m4.2xlarge
         image: ami-12345
@@ -36,7 +38,8 @@ Example of config.yaml
         development:
           linux01:
             security-group-ids: sg-12345
-            tags: Name=linux01,Role=Web,Platform=Test
+            tags:
+              Role: Web
             availability-zone: eu-west-1a
             subnet: subnet-123456
             run-list: 'role[web]'
@@ -44,7 +47,8 @@ Example of config.yaml
             <<: *default_value
           linux02:
             security-group-ids: lookupSG(DBSecurityGroup)
-            tags: Name=linux02,Role=DB,Platform=Test
+            tags:
+              Role: DB
             availability-zone: eu-west-1b
             subnet: lookupSubnet(PrivateSubnet)
             run-list: 'role[db]'
