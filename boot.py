@@ -281,8 +281,11 @@ class BootEnv(LoggingApp):
         # locals()[self.params.action+'_instance']()
         # getattr(self, self.params.action+'_instance')()
 
-
-        getattr(self, '_%s_instance' % self.params.action )()
+        try:
+            getattr(self, '_%s_instance' % self.params.action )()
+        except KeyboardInterrupt:
+            self.log.warn("Exit")
+            exit(0)
 
 
         end = time.time()
