@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 #
 
+
 import argparse
 import logging
 import time
@@ -212,7 +213,7 @@ class BootEnv(LoggingApp):
         m = []
         for mth in dir(self):
             valid = re.match( r'^_(.*)_instance$', mth, re.M|re.I)
-            if valid:
+            if valid and valid.group(1) != "name":
                 m.append(valid.group(1))
         return m
 
