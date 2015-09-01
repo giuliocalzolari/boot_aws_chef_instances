@@ -169,6 +169,15 @@ class BootEnv(LoggingApp):
 
 
     def _delete_instance(self):
+
+        confirm = raw_input("Do you want to delete: %s ?"
+            " (type 'yes'): "
+            % (self.params.instance))
+        if confirm != "yes":
+            self.logger.warning("Abort..")
+            exit(0)
+        else:
+
         instance_id = None
         filters = {"tag:Name" : self.params.instance,"tag:Environment" : self.params.environment, 'instance-state-name' : 'running'}
         reservations = self.conn.get_all_instances(filters=filters)
@@ -312,7 +321,7 @@ if __name__ == "__main__":
         dest="environment", required=False,
         help="environment to build")
     b.add_param(
-        "-y", "--yamlfile", default="./config.yaml",
+        "-y", "--yamlfile", default=os.path.abspath(os.path.dirname(__file__))+"/config.yaml",
         dest="yamlfile", required=False,
         help="main config file default( ./config.yaml )")
 
