@@ -177,19 +177,18 @@ class BootEnv(LoggingApp):
             self.logger.warning("Abort..")
             exit(0)
         else:
+            instance_id = None
+            filters = {"tag:Name" : self.params.instance,"tag:Environment" : self.params.environment, 'instance-state-name' : 'running'}
+            reservations = self.conn.get_all_instances(filters=filters)
+            for res in reservations:
+                for inst in res.instances:
+                    instance_id = inst.id
+                    break
 
-        instance_id = None
-        filters = {"tag:Name" : self.params.instance,"tag:Environment" : self.params.environment, 'instance-state-name' : 'running'}
-        reservations = self.conn.get_all_instances(filters=filters)
-        for res in reservations:
-            for inst in res.instances:
-                instance_id = inst.id
-                break
-
-        if instance_id:
-            self.terminate_with_vols_instance(instance_id)
-        else:
-            self.log.error( "instances not found")
+            if instance_id:
+                self.terminate_with_vols_instance(instance_id)
+            else:
+                self.log.error( "instances not found")
 
 
         os.system("knife node delete "+self.params.instance+" ")
