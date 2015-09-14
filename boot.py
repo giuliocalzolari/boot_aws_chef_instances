@@ -174,7 +174,7 @@ class BootEnv(LoggingApp):
             " (type 'yes'): "
             % (self.params.instance))
         if confirm != "yes":
-            self.logger.warning("Abort..")
+            self.log.warning("Abort..")
             exit(0)
         else:
             instance_id = None
