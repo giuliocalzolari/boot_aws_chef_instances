@@ -147,7 +147,7 @@ class BootEnv(LoggingApp):
                     exit(1)
 
 
-                if "aws_ssh_argv" in self.config["environment"][self.params.environment][self.params.instance]
+                if "aws_ssh_argv" in self.config["environment"][self.params.environment][self.params.instance]:
                     aws_ssh_argv = self.config["environment"][self.params.environment][self.params.instance]["aws_ssh_argv"]
                 else:
                     aws_ssh_argv = self.config["aws_ssh_argv"]
