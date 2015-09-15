@@ -146,10 +146,17 @@ class BootEnv(LoggingApp):
                     self.log.error("invalid mapping of aws_ssh_connect_ip  allowed value are public or private")
                     exit(1)
 
+
+                if "aws_ssh_argv" in self.config["environment"][self.params.environment][self.params.instance]
+                    aws_ssh_argv = self.config["environment"][self.params.environment][self.params.instance]["aws_ssh_argv"]
+                else:
+                    aws_ssh_argv = self.config["aws_ssh_argv"]
+
+
                 if self.is_ip_private(check_ip) == condition:
                     self.log.info ("Connecting to "+self.config["aws_ssh_connect_ip"]+" IP: "+check_ip)
                     found = True
-                    os.system("ssh "+self.config["aws_ssh_argv"]+" "+check_ip)
+                    os.system("ssh "+aws_ssh_argv+" "+check_ip)
                     break
 
 
@@ -166,6 +173,9 @@ class BootEnv(LoggingApp):
         self.config["environment"][self.params.environment][self.params.instance]["tags"] =  "Name="+self.params.instance+","+','.join('%s=%s' % o for o in tags.items())
 
         self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
+
+    def _runchefclient_instance(self):
+        self.execute_cmd("knife ssh 'name:"+self.params.instance+"' 'sudo chef-client' ")
 
 
     def _delete_instance(self):
