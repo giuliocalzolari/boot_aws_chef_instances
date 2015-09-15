@@ -50,6 +50,8 @@ class BootEnv(LoggingApp):
     def execute_cmd(self,cmd,argvs=None):
         if len(argvs) > 0:
             for argv in argvs:
+                if argv in ["aws_ssh_argv"]:
+                    continue
                 cmd +=str(" --"+argv+' '+self.quote_argument(argvs[argv]))
 
         self.log.info(cmd)
