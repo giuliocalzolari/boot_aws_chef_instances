@@ -198,6 +198,7 @@ class BootEnv(LoggingApp):
 
                     cmd = "knife bootstrap "+check_ip+" --environment "+self.params.environment+"  --node-name "+self.params.instance+" "
                     cmd += " --ssh-user "+ parms["ssh-user"]
+                    cmd += " --run-list "+ parms["run-list"]
                     if parms["ssh-user"] != "root":
                         cmd += " --sudo "
                     self.log.info(cmd)
