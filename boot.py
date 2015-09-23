@@ -167,6 +167,50 @@ class BootEnv(LoggingApp):
             exit(1)
         # self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
+
+    def _bootstrap_instance(self):
+        filters = {"tag:Name" : self.params.instance,"tag:Environment" : self.params.environment, 'instance-state-name' : 'running'}
+        reservations = self.conn.get_all_instances(filters=filters)
+        found = False
+        for res in reservations:
+            for inst in res.instances:
+                if self.config["aws_ssh_connect_ip"] == "public":
+                    condition = False
+                    check_ip = inst.ip_address
+                elif self.config["aws_ssh_connect_ip"] == "private":
+                    condition = True
+                    check_ip = inst.private_ip_address
+                else:
+                    self.log.error("invalid mapping of aws_ssh_connect_ip  allowed value are public or private")
+                    exit(1)
+
+                parms = self.config["environment"][self.params.environment][self.params.instance]
+
+                if "aws_ssh_argv" in parms:
+                    aws_ssh_argv = parms["aws_ssh_argv"]
+                else:
+                    aws_ssh_argv = self.config["aws_ssh_argv"]
+
+
+                if self.is_ip_private(check_ip) == condition:
+                    self.log.info ("bootstrap to "+self.config["aws_ssh_connect_ip"]+" IP: "+check_ip)
+                    found = True
+
+                    cmd = "knife bootstrap "+check_ip+" --environment "+self.params.environment+"  --node-name "+self.params.instance+" "
+                    cmd += " --ssh-user "+ parms["ssh-user"]
+                    cmd += " --run-list "+ parms["run-list"]
+                    cmd += " --identity-file "+ parms["identity-file"]
+                    os.system(cmd)
+                    break
+
+
+        if found == False:
+            self.log.error("No instances found - searched name: "+self.params.instance)
+            exit(1)
+        # self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
+
+
+
     def _create_instance(self):
         tags = { "Environment":self.params.environment  }
         tags.update(self.config["global_config"]["tags"])
