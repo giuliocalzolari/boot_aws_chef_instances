@@ -221,7 +221,7 @@ class BootEnv(LoggingApp):
         self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
     def _runchefclient_instance(self):
-        self.execute_cmd("knife ssh 'name:"+self.params.instance+"' 'sudo chef-client' ")
+        os.system("knife ssh 'name:"+self.params.instance+"' 'sudo chef-client' ")
 
 
     def _delete_instance(self):
