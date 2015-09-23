@@ -222,6 +222,12 @@ class BootEnv(LoggingApp):
 
     def _runchefclient_instance(self):
         parms = self.config["environment"][self.params.environment][self.params.instance]
+        if "aws_ssh_argv" in parms:
+            aws_ssh_argv = parms["aws_ssh_argv"]
+        else:
+            aws_ssh_argv = self.config["aws_ssh_argv"]
+
+
         cmd = "knife ssh 'name:"+self.params.instance+"' 'sudo chef-client'  --environment "+self.params.environment+"  "
         cmd += aws_ssh_argv
 
