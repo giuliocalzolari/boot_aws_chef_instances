@@ -285,6 +285,10 @@ class BootEnv(LoggingApp):
                 m.append(valid.group(1))
         return m
 
+    def get_allowed_env(self):
+        return self.config["environment"].keys()
+
+
     def main(self):
         """
         Tool for auto build instances using knife ec2 plugin and yaml config.
@@ -300,10 +304,7 @@ class BootEnv(LoggingApp):
             exit(1)
 
 
-        valid_env = ['development', 'production']
-        if self.params.environment not in valid_env:
-            self.log.error ("Invalid environment provided, must be one of: '%s'"  % (", ".join(valid_env)))
-            exit(1)
+
 
 
         # Make sure we can read the yaml file provided
@@ -314,13 +315,17 @@ class BootEnv(LoggingApp):
             exit(1)
 
 
-
         try:
             self.config = yaml.load(open(self.params.yamlfile))
         except IOError as e:
             self.log.error("No Configuration file found at " + self.params.config)
             exit(1)
 
+
+        valid_env = self.get_allowed_env()
+        if self.params.environment not in valid_env:
+            self.log.error ("Invalid environment provided, must be one of: '%s'"  % (", ".join(valid_env)))
+            exit(1)
 
         if not self.params.instance in self.config["environment"][self.params.environment]:
             self.log.error ("Invalid instance provided, must be one of: '%s'"  % (", ".join(self.config["environment"][self.params.environment].keys())))
