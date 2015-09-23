@@ -200,6 +200,7 @@ class BootEnv(LoggingApp):
                     cmd += " --ssh-user "+ parms["ssh-user"]
                     cmd += " --run-list "+ parms["run-list"]
                     cmd += " --identity-file "+ parms["identity-file"]
+                    self.log.info(cmd)
                     os.system(cmd)
                     break
 
@@ -221,7 +222,13 @@ class BootEnv(LoggingApp):
         self.execute_cmd("knife ec2 server create --environment "+self.params.environment+"  --node-name "+self.params.instance+" ",self.config["environment"][self.params.environment][self.params.instance])
 
     def _runchefclient_instance(self):
-        os.system("knife ssh 'name:"+self.params.instance+"' 'sudo chef-client' ")
+        parms = self.config["environment"][self.params.environment][self.params.instance]
+        cmd = "knife ssh 'name:"+self.params.instance+"' 'sudo chef-client'  --environment "+self.params.environment+"  "
+        cmd += " --ssh-user "+ parms["ssh-user"]
+        cmd += " --identity-file "+ parms["identity-file"]
+
+        self.log.info(cmd)
+        os.system(cmd)
 
 
     def _delete_instance(self):
