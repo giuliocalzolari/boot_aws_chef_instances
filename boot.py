@@ -197,8 +197,7 @@ class BootEnv(LoggingApp):
                     found = True
 
                     cmd = "knife bootstrap "+check_ip+" --environment "+self.params.environment+"  --node-name "+self.params.instance+" "
-                    cmd += " --ssh-user "+ parms["ssh-user"]
-                    cmd += " --run-list "+ parms["run-list"]
+                    cmd += aws_ssh_argv
                     cmd += " --identity-file "+ parms["identity-file"]
                     self.log.info(cmd)
                     os.system(cmd)
@@ -224,8 +223,7 @@ class BootEnv(LoggingApp):
     def _runchefclient_instance(self):
         parms = self.config["environment"][self.params.environment][self.params.instance]
         cmd = "knife ssh 'name:"+self.params.instance+"' 'sudo chef-client'  --environment "+self.params.environment+"  "
-        cmd += " --ssh-user "+ parms["ssh-user"]
-        cmd += " --identity-file "+ parms["identity-file"]
+        cmd += aws_ssh_argv
 
         self.log.info(cmd)
         os.system(cmd)
